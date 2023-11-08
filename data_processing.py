@@ -15,6 +15,19 @@ with open(os.path.join(__location__, 'Countries.csv')) as f:
     for r in rows:
         countries.append(dict(r))
 
+players = []
+with open(os.path.join(__location__, 'Players.csv')) as f:
+    rows = csv.DictReader(f)
+    for r in rows:
+        players.append(dict(r))
+
+teams = []
+with open(os.path.join(__location__, 'Teams.csv')) as f:
+    rows = csv.DictReader(f)
+    for r in rows:
+        teams.append(dict(r))
+
+
 class DB:
     def __init__(self):
         self.database = []
@@ -71,6 +84,7 @@ class Table:
     def __str__(self):
         return self.table_name + ':' + str(self.table)
 
+
 table1 = Table('cities', cities)
 table2 = Table('countries', countries)
 my_DB = DB()
@@ -121,3 +135,35 @@ for item in my_table2.table:
     if len(my_table1_filtered.table) >= 1:
         print(item['country'], my_table1_filtered.aggregate(lambda x: min(x), 'latitude'), my_table1_filtered.aggregate(lambda x: max(x), 'latitude'))
 print()
+
+print("player on a team with “ia” in the team name played less than 200 minutes and made more than 100 passes")
+for i in players:
+    if 'ia' in i['team'] and int(i['minutes']) < 200 and int(i['passes']) > 100:
+        print(f"{i['surname']} {i['team']} {i['position']}")
+
+print()
+print("The average number of games played for teams ranking below 10 versus teams ranking above or equal 10")
+table4 = Table('teams', teams)
+my_DB2 = DB()
+my_DB2.insert(table4)
+my_table4 = my_DB2.search('teams')
+top_my_table4 = my_table4.filter(lambda x: int(x['ranking']) <= 10)
+Top = (top_my_table4.aggregate(lambda x: sum(x)/len(x), 'games'))
+low_my_table4 = my_table4.filter(lambda x: int(x['ranking']) > 10)
+Low = (low_my_table4.aggregate(lambda x: sum(x)/len(x), 'games'))
+print(f"{Low:.3f} , {Top:.3f}")
+
+print()
+print("The average number of passes made by forwards versus by midfielders")
+table5 = Table('player', players)
+my_DB3 = DB()
+my_DB3.insert(table5)
+my_table5 = my_DB3.search('players')
+forward_tb5 = table5.filter(lambda x: x['position'] == 'forward')
+forward = forward_tb5.aggregate(lambda x: sum(x)/len(x), 'passes')
+
+mid_tb5 = table5.filter(lambda x: x['position'] == 'midfielder')
+mid = mid_tb5.aggregate(lambda x: sum(x)/len(x), 'passes')
+
+
+print(f"{forward:.3f}, {mid:.3f}")
