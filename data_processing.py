@@ -27,6 +27,11 @@ with open(os.path.join(__location__, 'Teams.csv')) as f:
     for r in rows:
         teams.append(dict(r))
 
+titanic = []
+with open(os.path.join(__location__, 'Titanic.csv')) as f:
+    rows = csv.DictReader(f)
+    for r in rows:
+        titanic.append(dict(r))
 
 class DB:
     def __init__(self):
@@ -144,9 +149,8 @@ for i in players:
 print()
 print("The average number of games played for teams ranking below 10 versus teams ranking above or equal 10")
 table4 = Table('teams', teams)
-my_DB2 = DB()
-my_DB2.insert(table4)
-my_table4 = my_DB2.search('teams')
+my_DB.insert(table4)
+my_table4 = my_DB.search('teams')
 top_my_table4 = my_table4.filter(lambda x: int(x['ranking']) <= 10)
 Top = (top_my_table4.aggregate(lambda x: sum(x)/len(x), 'games'))
 low_my_table4 = my_table4.filter(lambda x: int(x['ranking']) > 10)
@@ -156,14 +160,32 @@ print(f"{Low:.3f} , {Top:.3f}")
 print()
 print("The average number of passes made by forwards versus by midfielders")
 table5 = Table('player', players)
-my_DB3 = DB()
-my_DB3.insert(table5)
-my_table5 = my_DB3.search('players')
+my_DB.insert(table5)
+my_table5 = my_DB.search('players')
 forward_tb5 = table5.filter(lambda x: x['position'] == 'forward')
 forward = forward_tb5.aggregate(lambda x: sum(x)/len(x), 'passes')
-
 mid_tb5 = table5.filter(lambda x: x['position'] == 'midfielder')
 mid = mid_tb5.aggregate(lambda x: sum(x)/len(x), 'passes')
-
-
 print(f"{forward:.3f}, {mid:.3f}")
+
+print()
+print("The average fare paid by passengers in the first class versus in the third class")
+table6 = Table('titanic', titanic)
+my_DB.insert(table6)
+my_table6 = my_DB.search('titanic')
+firstclass = my_table6.filter(lambda x: x['class'] == '1')
+print(f"{firstclass.aggregate(lambda x: sum(x) / len(x), 'fare'):.3f}", end=', ')
+thirdclass = my_table6.filter(lambda x: x['class'] == '3')
+print(f"{thirdclass.aggregate(lambda x: sum(x) / len(x), 'fare'):.3f}")
+
+print()
+print("The survival rate of male versus female passengers")
+titanic_M = table6.filter(lambda x: x['gender'] == 'M').aggregate(lambda x: len(x), 'fare')
+survived_M = table6.filter(lambda x: x['survived'] == 'yes').filter(lambda x: x['gender'] == 'M').aggregate(lambda x: len(x), 'fare')
+avg_m = ((survived_M / titanic_M) * 100)
+titanic_F = table6.filter(lambda x: x['gender'] == 'F').aggregate(lambda x: len(x), 'fare')
+survived_F = table6.filter(lambda x: x['survived'] == 'yes').filter(lambda x: x['gender'] == 'F').aggregate(lambda x: len(x), 'fare')
+avg_f = ((survived_F / titanic_F) * 100)
+print(f"{avg_m:.1f}% , {avg_f:.1f}%")
+
+print()
